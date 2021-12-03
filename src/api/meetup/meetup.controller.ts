@@ -1,58 +1,30 @@
-import { Controller, Get, Param } from '@nestjs/common'
-import { MeetupInterface } from '../../interfaces/meetup.interface'
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common'
+import { AttendanceState, MeetupInterface } from '../../interfaces/meetup.interface'
+import { UmsAuthGuard } from '../../auth/guards/ums-auth.guard'
+import { CreateMeetupRequestDto } from './contracts/request/create-meetup-request.dto'
+import { ReqUser } from '../../auth/decorators/req-user.decorator'
+import { Meetup, User } from '@prisma/client'
+import { MeetupService } from './meetup.service'
 
 @Controller('meetup')
 export class MeetupController {
-    private readonly data: MeetupInterface[] = [
-        {
-            id: 'HELLO',
-            name: 'Mega Party 2021',
-            startDate: new Date(),
-            endDate: new Date(),
-            location: {
-                friendlyName: 'Roots',
-                address: 'Cluj-Napoca',
-                geoCoordinates: {
-                    longitude: 0,
-                    latitude: 0,
-                },
-            },
-            organizer: {
-                id: 'test',
-                firstName: 'Fineas',
-                lastName: 'Gavre',
-            },
-            attendances: [],
-        },
-        {
-            id: 'HELLO2',
-            name: 'Marvel & Chill',
-            startDate: new Date(),
-            endDate: new Date(),
-            location: {
-                friendlyName: 'Roots',
-                address: 'Cluj-Napoca',
-                geoCoordinates: {
-                    longitude: 0,
-                    latitude: 0,
-                },
-            },
-            organizer: {
-                id: 'test',
-                firstName: 'Fineas',
-                lastName: 'Gavre',
-            },
-            attendances: [],
-        }
-    ]
+    constructor(private meetupService: MeetupService) {}
 
     @Get()
-    findAll(): MeetupInterface[] {
-        return this.data
+    @UseGuards(UmsAuthGuard)
+    async findAll(): Promise<Meetup[]> {
+        return this.meetupService.getAllMeetups()
     }
 
     @Get(':id')
-    findOne(@Param('id') meetupId: string): MeetupInterface {
-        return this.data.find(meetup => meetup.id === meetupId)
+    @UseGuards(UmsAuthGuard)
+    async findOne(@Param('id') meetupId: string): Promise<Meetup> {
+        return this.meetupService.getSpecificMeetup(meetupId)
+    }
+
+    @Post()
+    @UseGuards(UmsAuthGuard)
+    async create(@Body() meetupData: CreateMeetupRequestDto, @ReqUser() user: User): Promise<Meetup> {
+        return this.meetupService.createMeetup(user, meetupData)
     }
 }

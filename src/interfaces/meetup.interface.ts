@@ -24,7 +24,7 @@ interface MeetupUserAttendance {
     state: AttendanceState
 }
 
-enum AttendanceState {
+export enum AttendanceState {
     DECLINED,
     TENTATIVE,
     ACCEPTED,
